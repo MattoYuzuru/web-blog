@@ -4,13 +4,15 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://blog-backend:8080
     container_name: keykomi-blog-frontend
     ports:
       - "3001:3000"
     env_file:
       - .env
     environment:
-      NEXT_PUBLIC_API_URL: http://blog-backend:8001
+      NEXT_PUBLIC_API_URL: http://blog-backend:8080
     depends_on:
       - blog-backend
     networks:
