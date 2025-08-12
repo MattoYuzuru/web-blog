@@ -24,17 +24,27 @@ repositories {
 }
 
 dependencies {
+	// Spring Boot starters
+	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.security:spring-security-test")
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+	// Убираем Security пока что, добавим позже когда нужно будет
+	// implementation("org.springframework.boot:spring-boot-starter-security")
+
+	// Development
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	// DB
+
+	// Database
 	runtimeOnly("org.postgresql:postgresql")
+
 	// Lombok
 	annotationProcessor("org.projectlombok:lombok")
 	compileOnly("org.projectlombok:lombok")
-	// Tests
+
+	// Testing
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	// testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testRuntimeOnly("com.h2database:h2")
 }
