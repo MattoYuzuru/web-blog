@@ -26,13 +26,17 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
-	compileOnly("org.projectlombok:lombok")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	runtimeOnly("org.postgresql:postgresql")
-	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+	// DB
+	runtimeOnly("org.postgresql:postgresql")
+	// Lombok
+	annotationProcessor("org.projectlombok:lombok")
+	compileOnly("org.projectlombok:lombok")
+	// Tests
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testRuntimeOnly("com.h2database:h2")
 }
 
 tasks.withType<Test> {
