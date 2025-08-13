@@ -19,7 +19,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: "."
           target: "/home/keykomi/blog"
-          rm: true
           strip_components: 0
 
       - name: SSH Commands
