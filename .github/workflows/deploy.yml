@@ -30,13 +30,15 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /home/keykomi/blog
-            docker compose down
+            docker compose -f docker-compose.prod.yml down
             docker image prune -f
-            docker compose up -d --build --pull always --remove-orphans --force-recreate
-            docker compose ps
+            docker compose -f docker-compose.prod.yml up -d --build --pull always --remove-orphans --force-recreate
+            docker compose -f docker-compose.prod.yml ps
+            
             if ! docker compose ps | grep -q "Up"; then
               echo "Some containers failed to start. Showing logs:"
               docker compose logs --tail=50
               exit 1
             fi
+
           timeout: 30m
