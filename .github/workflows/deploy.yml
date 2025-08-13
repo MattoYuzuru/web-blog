@@ -31,7 +31,7 @@ jobs:
             cd /home/keykomi/blog
             docker compose -f docker-compose.prod.yml down
             docker image prune -f
-            docker compose -f docker-compose.prod.yml up -d --build --pull always --remove-orphans --force-recreate
+            docker compose -f docker-compose.prod.yml up -d --build --pull missing --remove-orphans --force-recreate
             docker compose -f docker-compose.prod.yml ps
             
             if ! docker compose ps | grep -q "Up"; then
