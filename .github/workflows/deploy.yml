@@ -1,0 +1,42 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy via SSH
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "."
+          target: "/home/keykomi/blog"
+          rm: true
+          strip_components: 0
+
+      - name: SSH Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/keykomi/blog
+            docker compose down
+            docker image prune -f
+            docker compose up -d --build --pull always --remove-orphans --force-recreate
+            docker compose ps
+            if ! docker compose ps | grep -q "Up"; then
+              echo "Some containers failed to start. Showing logs:"
+              docker compose logs --tail=50
+              exit 1
+            fi
+          timeout: 30m
