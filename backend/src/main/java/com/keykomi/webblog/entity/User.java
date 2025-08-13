@@ -37,12 +37,6 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private ZonedDateTime createdAt;
 
-    public User(String username, String mail, String hashedPassword) {
-        this.username = username;
-        this.mail = mail;
-        this.hashedPassword = hashedPassword;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
