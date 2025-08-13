@@ -27,7 +27,7 @@ export default function LoginPage() {
 
         try {
             const response = await apiClient.login({
-                username: formData.username,
+                login: formData.username,
                 password: formData.password
             });
 
