@@ -2,26 +2,33 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
 
+# Install dependencies
 RUN npm ci
 
+# Copy all source files including config files
 COPY . .
 
+# Set build arguments
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
+# Build the application
 RUN npm run build
 
-# production image
+# Production image
 FROM node:18-alpine
 
 WORKDIR /app
 
+# Copy built application
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.js ./next.config.js
 
 EXPOSE 3000
 
