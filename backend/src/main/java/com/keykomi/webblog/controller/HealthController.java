@@ -20,7 +20,7 @@ public class HealthController {
         );
     }
 
-    @GetMapping("/articles")
+    @GetMapping("/health/articles")
     public Map<String, Object> getArticles() {
         return Map.of(
                 "articles", new Object[0],  // Пустой массив для начала

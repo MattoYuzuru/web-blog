@@ -1,6 +1,7 @@
 package com.keykomi.webblog.security;
 
 import com.keykomi.webblog.entity.User;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -8,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 
+@Getter
 public class UserDetailsImpl implements UserDetails {
 
     private final Long id;
@@ -44,14 +46,6 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public String getUsername() {
         return username;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getMail() {
-        return mail;
     }
 
     @Override

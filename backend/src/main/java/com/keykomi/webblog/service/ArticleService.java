@@ -3,6 +3,9 @@ package com.keykomi.webblog.service;
 import com.keykomi.webblog.dto.ArticleDTO;
 import com.keykomi.webblog.entity.Article;
 import com.keykomi.webblog.repository.ArticleRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +17,12 @@ public class ArticleService {
 
     public ArticleService(ArticleRepository articleRepository) {
         this.articleRepository = articleRepository;
+    }
+
+    public Page<ArticleDTO> getArticlesByPage(int page, int limit) {
+        Pageable pageable = PageRequest.of(page - 1, limit);
+        return articleRepository.findAll(pageable)
+            .map(this::toDTO);
     }
 
     public List<ArticleDTO> getAllArticles() {
@@ -64,6 +73,13 @@ public class ArticleService {
         }
 
         return toDTO(articleRepository.save(existing));
+    }
+
+    public void deleteArticle(Long id) {
+        if (!articleRepository.existsById(id)) {
+            throw new RuntimeException("Article not found: " + id);
+        }
+        articleRepository.deleteById(id);
     }
 
     private ArticleDTO toDTO(Article article) {

@@ -1,7 +1,8 @@
-package com.keykomi.webblog.security;
+package com.keykomi.webblog.service;
 
 import com.keykomi.webblog.entity.User;
 import com.keykomi.webblog.repository.UserRepository;
+import com.keykomi.webblog.security.UserDetailsImpl;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
