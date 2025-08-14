@@ -13,14 +13,18 @@ const nextConfig = {
         ],
     },
     async rewrites() {
+        // Определяем URL backend'а в зависимости от окружения
+        const backendUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+
+        console.log('Backend URL for rewrites:', backendUrl);
+
         return [
             {
                 source: '/api/:path*',
-                destination: `${process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/:path*`,
+                destination: `${backendUrl}/api/:path*`,
             },
         ];
     },
-    // Удалите experimental.appDir если используете App Router (он уже стабильный в Next.js 14)
 
     // Добавьте обработку статических файлов
     assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
@@ -29,7 +33,10 @@ const nextConfig = {
     env: {
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
         INTERNAL_API_URL: process.env.INTERNAL_API_URL,
-    }
+    },
+
+    // Включите standalone для Docker
+    output: 'standalone',
 };
 
 module.exports = nextConfig;

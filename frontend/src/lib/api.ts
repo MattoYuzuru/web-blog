@@ -1,27 +1,43 @@
 import {Article, CreateArticleRequest, LoginRequest, LoginResponse, ApiResponse} from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 class ApiClient {
-    private readonly baseURL: string;
     private token: string | null = null;
 
-    constructor(baseURL: string) {
-        this.baseURL = baseURL;
+    constructor() {
+        // Инициализируем токен только на клиенте
+        this.initializeToken();
+    }
+
+    private initializeToken() {
         if (typeof window !== 'undefined') {
             this.token = localStorage.getItem('auth_token');
         }
+    }
+
+    // Метод для проверки авторизации
+    public isAuthenticated(): boolean {
+        if (typeof window !== 'undefined') {
+            // Всегда получаем актуальный токен из localStorage
+            this.token = localStorage.getItem('auth_token');
+        }
+        return !!this.token;
     }
 
     private async request<T>(
         endpoint: string,
         options: RequestInit = {}
     ): Promise<ApiResponse<T>> {
-        const url = `${this.baseURL}${endpoint}`;
+        // Используем относительные пути - Next.js rewrites обработает их
+        const url = endpoint;
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             ...(options.headers as Record<string, string>),
         };
+
+        // Всегда проверяем актуальный токен перед запросом
+        if (typeof window !== 'undefined') {
+            this.token = localStorage.getItem('auth_token');
+        }
 
         if (this.token) {
             headers['Authorization'] = `Bearer ${this.token}`;
@@ -34,6 +50,11 @@ class ApiClient {
             });
 
             if (!response.ok) {
+                // Если 401 - токен истек или недействителен
+                if (response.status === 401) {
+                    this.logout();
+                    throw new Error('Unauthorized - please login again');
+                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
@@ -94,4 +115,4 @@ class ApiClient {
     }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL);
+export const apiClient = new ApiClient();
