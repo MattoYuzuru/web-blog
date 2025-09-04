@@ -3,11 +3,10 @@
 # -----------------------------
 FROM node:20-alpine AS base
 WORKDIR /app
-ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # -----------------------------
-# Install dependencies
+# Install dependencies (dev + prod)
 # -----------------------------
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
@@ -45,6 +44,7 @@ ARG NEXT_PUBLIC_API_URL
 ARG INTERNAL_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV INTERNAL_API_URL=$INTERNAL_API_URL
+ENV NODE_ENV=production
 
 EXPOSE 3000
 USER nextjs
