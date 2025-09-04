@@ -41,6 +41,8 @@ services:
     networks:
       - blog-network
     restart: unless-stopped
+    ports:
+      - "8081:8080"  # Пробрасываем порт для доступа из браузера
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -53,13 +55,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8081  # Используем внешний порт
+        NEXT_PUBLIC_API_URL: http://localhost:8081  # Для браузера - внешний порт
     container_name: keykomi-blog-frontend
-    env_file:
-      - .env
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8081  # Для браузера
-      INTERNAL_API_URL: http://blog-backend:8080  # Для SSR
+      INTERNAL_API_URL: http://blog-backend:8080  # Для SSR внутри Docker
     depends_on:
       blog-backend:
         condition: service_healthy

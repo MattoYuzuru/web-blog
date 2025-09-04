@@ -6,7 +6,7 @@ import SearchInput from '@/components/SearchInput';
 import ArticleCard from '@/components/ArticleCard';
 import {Article, BackendArticle} from '@/types';
 import {apiClient} from '@/lib/api';
-import {Loader2, AlertCircle, LogIn} from 'lucide-react';
+import {Loader2, AlertCircle, LogIn, LogOut} from 'lucide-react';
 
 export default function HomePage() {
     const [articles, setArticles] = useState<Article[]>([]);
@@ -14,6 +14,7 @@ export default function HomePage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [error, setError] = useState('');
     const [needsAuth, setNeedsAuth] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const router = useRouter();
 
     // Функция для преобразования данных бэкенда в формат фронтенда
@@ -29,6 +30,8 @@ export default function HomePage() {
     });
 
     useEffect(() => {
+        // Проверяем авторизацию при загрузке
+        setIsAuthenticated(apiClient.isAuthenticated());
         loadArticles();
     }, []);
 
@@ -44,7 +47,7 @@ export default function HomePage() {
             if (response.success) {
                 console.log('Articles loaded successfully:', response.data);
 
-                // Бэкенд возвращает пагинированный ответ с полем 'content'
+                // Исправлено: данные статей находятся в response.data.content
                 const articlesData = response.data.content || [];
 
                 // Преобразуем данные из бэкенда в формат фронтенда
@@ -55,8 +58,9 @@ export default function HomePage() {
                 console.error('Failed to load articles:', response.message);
 
                 // Проверяем, нужна ли авторизация
-                if (response.message?.includes('Unauthorized')) {
+                if (response.message?.includes('Unauthorized') || response.message?.includes('401')) {
                     setNeedsAuth(true);
+                    setIsAuthenticated(false);
                     setError('Authorization required to view articles');
                 } else {
                     setError(response.message || 'Failed to load articles');
@@ -124,8 +128,9 @@ export default function HomePage() {
                 const transformedArticles = articlesData.map(transformBackendArticle);
                 setArticles(transformedArticles);
             } else {
-                if (response.message?.includes('Unauthorized')) {
+                if (response.message?.includes('Unauthorized') || response.message?.includes('401')) {
                     setNeedsAuth(true);
+                    setIsAuthenticated(false);
                     setError('Authorization required to search articles');
                 } else {
                     setError(response.message || 'Search failed');
@@ -155,13 +160,46 @@ export default function HomePage() {
         router.push('/login');
     };
 
+    const handleLogout = () => {
+        apiClient.logout();
+        setIsAuthenticated(false);
+        // Перезагружаем статьи после выхода
+        loadArticles();
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Hero Section */}
             <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                    Welcome to KeykoMI Lib
-                </h1>
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex-1">
+                        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
+                            Welcome to KeykoMI Lib
+                        </h1>
+                    </div>
+
+                    {/* Auth Button */}
+                    <div className="ml-4">
+                        {isAuthenticated ? (
+                            <button
+                                onClick={handleLogout}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-600 bg-red-100 hover:bg-red-200 dark:text-red-200 dark:bg-red-800 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                                <LogOut className="h-4 w-4 mr-2" />
+                                Logout
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleLogin}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-violet-600 bg-violet-100 hover:bg-violet-200 dark:text-violet-200 dark:bg-violet-800 dark:hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500"
+                            >
+                                <LogIn className="h-4 w-4 mr-2" />
+                                Login
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
                     Блог о моей жизни, учебе, карьере...
                 </p>

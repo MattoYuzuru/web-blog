@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 
 export default function LoginPage() {
@@ -13,6 +13,7 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -24,6 +25,7 @@ export default function LoginPage() {
 
         setLoading(true);
         setError('');
+        setSuccess(false);
 
         try {
             console.log('Attempting login with:', { login: formData.username });
@@ -37,10 +39,13 @@ export default function LoginPage() {
 
             if (response.success && response.data?.access_token) {
                 console.log('Login successful, redirecting to homepage');
-                // Небольшая задержка для сохранения токена
+                setSuccess(true);
+
+                // Показываем успешное сообщение перед редиректом
                 setTimeout(() => {
                     router.push('/');
-                }, 100);
+                    router.refresh(); // Обновляем страницу для применения нового состояния авторизации
+                }, 1000);
             } else {
                 setError(response.message || 'Ошибка логина. Проверь введенные данные.');
             }
@@ -60,6 +65,25 @@ export default function LoginPage() {
         }));
         if (error) setError('');
     };
+
+    // Показываем сообщение об успехе
+    if (success) {
+        return (
+            <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-md w-full space-y-8 text-center">
+                    <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-6">
+                        <CheckCircle className="mx-auto h-12 w-12 text-green-600 dark:text-green-400 mb-4" />
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                            Вход выполнен успешно!
+                        </h2>
+                        <p className="text-sm text-green-600 dark:text-green-400">
+                            Перенаправляем на главную страницу...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -96,7 +120,7 @@ export default function LoginPage() {
                                 required
                                 value={formData.username}
                                 onChange={handleInputChange}
-                                className="input-field"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:text-gray-100"
                                 placeholder="Enter your username"
                                 disabled={loading}
                             />
@@ -115,7 +139,7 @@ export default function LoginPage() {
                                     required
                                     value={formData.password}
                                     onChange={handleInputChange}
-                                    className="input-field pr-10"
+                                    className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:text-gray-100"
                                     placeholder="Enter your password"
                                     disabled={loading}
                                 />

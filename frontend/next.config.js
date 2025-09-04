@@ -1,42 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Необходимо для Docker standalone build
+    output: 'standalone',
+
+    // Настройки для изображений
     images: {
-        remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: '**',
-            },
-            {
-                protocol: 'http',
-                hostname: 'localhost',
-            },
-        ],
-    },
-    async rewrites() {
-        // Определяем URL backend'а в зависимости от окружения
-        const backendUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
-
-        console.log('Rewrites backend URL:', backendUrl);
-
-        return [
-            {
-                source: '/api/:path*',
-                destination: `${backendUrl}/api/:path*`,
-            },
-        ];
+        domains: ['localhost'],
+        unoptimized: true, // Для упрощения в Docker
     },
 
-    // Добавьте обработку статических файлов
-    assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
-
-    // Для разработки
+    // Переменные окружения
     env: {
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
         INTERNAL_API_URL: process.env.INTERNAL_API_URL,
     },
 
-    // Включите standalone для Docker
-    output: 'standalone',
-};
+    // Для работы в Docker
+    experimental: {
+        serverComponentsExternalPackages: [],
+    },
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig
