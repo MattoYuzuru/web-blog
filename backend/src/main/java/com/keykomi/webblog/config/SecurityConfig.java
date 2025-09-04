@@ -63,10 +63,17 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        // Публичные endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
+
+                        // Разрешить чтение статей без авторизации
+                        .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/articles").permitAll()
+
+                        // Все остальные запросы требуют авторизации (создание, обновление, удаление статей)
                         .anyRequest().authenticated()
                 );
 

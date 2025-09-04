@@ -16,7 +16,7 @@ const nextConfig = {
         // Определяем URL backend'а в зависимости от окружения
         const backendUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
-        console.log('Backend URL for rewrites:', backendUrl);
+        console.log('Rewrites backend URL:', backendUrl);
 
         return [
             {

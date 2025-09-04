@@ -26,20 +26,27 @@ export default function LoginPage() {
         setError('');
 
         try {
+            console.log('Attempting login with:', { login: formData.username });
+
             const response = await apiClient.login({
                 login: formData.username,
                 password: formData.password
             });
 
-            if (response.success) {
-                // Вернуться на главную
-                router.push('/');
+            console.log('Login response:', response);
+
+            if (response.success && response.data?.access_token) {
+                console.log('Login successful, redirecting to homepage');
+                // Небольшая задержка для сохранения токена
+                setTimeout(() => {
+                    router.push('/');
+                }, 100);
             } else {
                 setError(response.message || 'Ошибка логина. Проверь введенные данные.');
             }
         } catch (error) {
+            console.error('Login error:', error);
             setError('Ошибка логина. Попробуй ещё раз.');
-            console.error('Ошибка логина:', error);
         } finally {
             setLoading(false);
         }

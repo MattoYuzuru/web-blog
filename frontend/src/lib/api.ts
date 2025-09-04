@@ -1,11 +1,23 @@
-import {Article, CreateArticleRequest, LoginRequest, LoginResponse, ApiResponse} from '@/types';
+import {Article, BackendArticle, CreateArticleRequest, LoginRequest, LoginResponse, ApiResponse, PaginatedResponse} from '@/types';
 
 class ApiClient {
     private token: string | null = null;
+    private baseUrl: string;
 
     constructor() {
-        // Инициализируем токен только на клиенте
+        // Определяем базовый URL в зависимости от окружения
+        this.baseUrl = this.getBaseUrl();
         this.initializeToken();
+    }
+
+    private getBaseUrl(): string {
+        // На клиенте используем NEXT_PUBLIC_API_URL
+        if (typeof window !== 'undefined') {
+            return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+        }
+
+        // На сервере можем использовать internal URL для SSR (если нужно)
+        return process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
     }
 
     private initializeToken() {
@@ -14,10 +26,8 @@ class ApiClient {
         }
     }
 
-    // Метод для проверки авторизации
     public isAuthenticated(): boolean {
         if (typeof window !== 'undefined') {
-            // Всегда получаем актуальный токен из localStorage
             this.token = localStorage.getItem('auth_token');
         }
         return !!this.token;
@@ -27,8 +37,9 @@ class ApiClient {
         endpoint: string,
         options: RequestInit = {}
     ): Promise<ApiResponse<T>> {
-        // Используем относительные пути - Next.js rewrites обработает их
-        const url = endpoint;
+        // Используем полный URL к бэкенду
+        const url = `${this.baseUrl}${endpoint}`;
+
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             ...(options.headers as Record<string, string>),
@@ -44,13 +55,16 @@ class ApiClient {
         }
 
         try {
+            console.log(`Making request to: ${url}`); // Для отладки
+
             const response = await fetch(url, {
                 ...options,
                 headers,
+                // Добавляем CORS headers если нужно
+                mode: 'cors',
             });
 
             if (!response.ok) {
-                // Если 401 - токен истек или недействителен
                 if (response.status === 401) {
                     this.logout();
                     throw new Error('Unauthorized - please login again');
@@ -77,11 +91,14 @@ class ApiClient {
             body: JSON.stringify(credentials),
         });
 
-        if (response.success && response.data.access_token) {
+        if (response.success && response.data?.access_token) {
             this.token = response.data.access_token;
             if (typeof window !== 'undefined') {
                 localStorage.setItem('auth_token', this.token);
+                console.log('Token saved to localStorage:', this.token.substring(0, 20) + '...');
             }
+        } else {
+            console.error('Login failed or no token received:', response);
         }
 
         return response;
@@ -95,23 +112,23 @@ class ApiClient {
     }
 
     // Articles methods
-    async getArticles(page: number = 1, limit: number = 10): Promise<ApiResponse<Article[]>> {
-        return this.request<Article[]>(`/api/articles?page=${page}&limit=${limit}`);
+    async getArticles(page: number = 1, limit: number = 10): Promise<ApiResponse<PaginatedResponse<BackendArticle>>> {
+        return this.request<PaginatedResponse<BackendArticle>>(`/api/articles?page=${page}&limit=${limit}`);
     }
 
-    async getArticle(id: string): Promise<ApiResponse<Article>> {
-        return this.request<Article>(`/api/articles/${id}`);
+    async getArticle(id: string): Promise<ApiResponse<BackendArticle>> {
+        return this.request<BackendArticle>(`/api/articles/${id}`);
     }
 
-    async createArticle(article: CreateArticleRequest): Promise<ApiResponse<Article>> {
-        return this.request<Article>('/api/articles', {
+    async createArticle(article: CreateArticleRequest): Promise<ApiResponse<BackendArticle>> {
+        return this.request<BackendArticle>('/api/articles', {
             method: 'POST',
             body: JSON.stringify(article),
         });
     }
 
-    async searchArticles(query: string): Promise<ApiResponse<Article[]>> {
-        return this.request<Article[]>(`/api/articles/search?q=${encodeURIComponent(query)}`);
+    async searchArticles(query: string): Promise<ApiResponse<PaginatedResponse<BackendArticle>>> {
+        return this.request<PaginatedResponse<BackendArticle>>(`/api/articles/search?q=${encodeURIComponent(query)}`);
     }
 }
 

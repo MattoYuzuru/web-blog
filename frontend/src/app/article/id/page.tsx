@@ -5,7 +5,7 @@ import {useParams} from 'next/navigation';
 import Image from 'next/image';
 import {Calendar, Eye, ArrowLeft, Loader2} from 'lucide-react';
 import Link from 'next/link';
-import {Article} from '@/types';
+import {Article, BackendArticle} from '@/types';
 import {apiClient} from '@/lib/api';
 import {formatDate, formatReadCount} from '@/lib/utils';
 import ArticleContent from '@/components/ArticleContent';
@@ -16,6 +16,18 @@ export default function ArticlePage() {
     const [article, setArticle] = useState<Article | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Функция для преобразования данных бэкенда в формат фронтенда
+    const transformBackendArticle = (backendArticle: BackendArticle): Article => ({
+        id: backendArticle.id?.toString() || '',
+        title: backendArticle.title || 'No title',
+        content: backendArticle.content || '',
+        image_url: backendArticle.image_url || '/placeholder-article.jpg',
+        published_at: backendArticle.published_at || new Date().toISOString().split('T')[0],
+        read_count: backendArticle.read_count || 0,
+        tags: backendArticle.tags || [],
+        author: backendArticle.author || 'KeykoMI'
+    });
 
     useEffect(() => {
         if (articleId) {
@@ -30,12 +42,15 @@ export default function ArticlePage() {
         try {
             const response = await apiClient.getArticle(articleId);
             if (response.success) {
-                setArticle(response.data);
+                // Преобразуем данные бэкенда в формат фронтенда
+                const transformedArticle = transformBackendArticle(response.data);
+                setArticle(transformedArticle);
             } else {
                 setError('Article not found');
             }
         } catch (error) {
             console.error('Failed to load article:', error);
+            setError('Failed to load article');
             // Моки
             setArticle({
                 id: articleId,
@@ -150,8 +165,8 @@ export default function ArticlePage() {
                             <div className="flex items-center space-x-2">
                                 <span>by</span>
                                 <span className="font-medium text-violet-600 dark:text-violet-400">
-                  {article.author}
-                </span>
+                                    {article.author}
+                                </span>
                             </div>
                         )}
                     </div>
@@ -163,8 +178,8 @@ export default function ArticlePage() {
                                 key={tag}
                                 className="px-3 py-1 bg-violet-100 dark:bg-violet-900 text-violet-800 dark:text-violet-200 text-sm font-medium rounded-full"
                             >
-                #{tag}
-              </span>
+                                #{tag}
+                            </span>
                         ))}
                     </div>
 

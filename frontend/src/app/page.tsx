@@ -1,16 +1,32 @@
 'use client';
 
 import {useState, useEffect} from 'react';
+import {useRouter} from 'next/navigation';
 import SearchInput from '@/components/SearchInput';
 import ArticleCard from '@/components/ArticleCard';
-import {Article} from '@/types';
+import {Article, BackendArticle} from '@/types';
 import {apiClient} from '@/lib/api';
-import {Loader2} from 'lucide-react';
+import {Loader2, AlertCircle, LogIn} from 'lucide-react';
 
 export default function HomePage() {
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [error, setError] = useState('');
+    const [needsAuth, setNeedsAuth] = useState(false);
+    const router = useRouter();
+
+    // Функция для преобразования данных бэкенда в формат фронтенда
+    const transformBackendArticle = (backendArticle: BackendArticle): Article => ({
+        id: backendArticle.id?.toString() || '',
+        title: backendArticle.title || 'No title',
+        content: backendArticle.content || '',
+        image_url: backendArticle.image_url || '/placeholder-article.jpg',
+        published_at: backendArticle.published_at || new Date().toISOString().split('T')[0],
+        read_count: backendArticle.read_count || 0,
+        tags: backendArticle.tags || [],
+        author: backendArticle.author || 'KeykoMI'
+    });
 
     useEffect(() => {
         loadArticles();
@@ -18,50 +34,78 @@ export default function HomePage() {
 
     const loadArticles = async () => {
         setLoading(true);
+        setError('');
+        setNeedsAuth(false);
+
         try {
+            console.log('Loading articles...');
             const response = await apiClient.getArticles();
+
             if (response.success) {
-                setArticles(response.data);
+                console.log('Articles loaded successfully:', response.data);
+
+                // Бэкенд возвращает пагинированный ответ с полем 'content'
+                const articlesData = response.data.content || [];
+
+                // Преобразуем данные из бэкенда в формат фронтенда
+                const transformedArticles = articlesData.map(transformBackendArticle);
+
+                setArticles(transformedArticles);
+            } else {
+                console.error('Failed to load articles:', response.message);
+
+                // Проверяем, нужна ли авторизация
+                if (response.message?.includes('Unauthorized')) {
+                    setNeedsAuth(true);
+                    setError('Authorization required to view articles');
+                } else {
+                    setError(response.message || 'Failed to load articles');
+                    // Показываем моковые данные в случае ошибки
+                    setArticles(getMockArticles());
+                }
             }
         } catch (error) {
             console.error('Failed to load articles:', error);
-            // Замокал статьи
-            setArticles([
-                {
-                    id: '1',
-                    title: 'Зачем вести отдельный сайт для блога если есть Телеграм?',
-                    content: 'Контент.',
-                    image_url: '/placeholder-article.jpg',
-                    published_at: '2025-08-09',
-                    read_count: 1,
-                    tags: ['thoughts'],
-                    author: 'KeykoMI'
-                },
-                {
-                    id: '2',
-                    title: 'Путешествие в Корею, август-сентябрь 2025',
-                    content: 'Контент статьи',
-                    image_url: '/placeholder-article.jpg',
-                    published_at: '2025-08-10',
-                    read_count: 5,
-                    tags: ['travel'],
-                    author: 'KeykoMI'
-                },
-                {
-                    id: '3',
-                    title: 'Пример статьи',
-                    content: 'Контент',
-                    image_url: '/placeholder-article.jpg',
-                    published_at: '2025-08-05',
-                    read_count: 1,
-                    tags: ['life'],
-                    author: 'KeykoMI'
-                }
-            ]);
+            setError('Failed to connect to server');
+            // Показываем моковые данные в случае ошибки
+            setArticles(getMockArticles());
         } finally {
             setLoading(false);
         }
     };
+
+    const getMockArticles = (): Article[] => [
+        {
+            id: '1',
+            title: 'Зачем вести отдельный сайт для блога если есть Телеграм?',
+            content: 'Контент.',
+            image_url: '/placeholder-article.jpg',
+            published_at: '2025-08-09',
+            read_count: 1,
+            tags: ['thoughts'],
+            author: 'KeykoMI'
+        },
+        {
+            id: '2',
+            title: 'Путешествие в Корею, август-сентябрь 2025',
+            content: 'Контент статьи',
+            image_url: '/placeholder-article.jpg',
+            published_at: '2025-08-10',
+            read_count: 5,
+            tags: ['travel'],
+            author: 'KeykoMI'
+        },
+        {
+            id: '3',
+            title: 'Пример статьи',
+            content: 'Контент',
+            image_url: '/placeholder-article.jpg',
+            published_at: '2025-08-05',
+            read_count: 1,
+            tags: ['life'],
+            author: 'KeykoMI'
+        }
+    ];
 
     const handleSearch = async (query: string) => {
         if (!query.trim()) {
@@ -71,15 +115,33 @@ export default function HomePage() {
 
         setLoading(true);
         setSearchQuery(query);
+        setError('');
+
         try {
             const response = await apiClient.searchArticles(query);
             if (response.success) {
-                setArticles(response.data);
+                const articlesData = response.data.content || [];
+                const transformedArticles = articlesData.map(transformBackendArticle);
+                setArticles(transformedArticles);
+            } else {
+                if (response.message?.includes('Unauthorized')) {
+                    setNeedsAuth(true);
+                    setError('Authorization required to search articles');
+                } else {
+                    setError(response.message || 'Search failed');
+                    // Фильтр моков при ошибке
+                    const filtered = getMockArticles().filter(article =>
+                        article.title.toLowerCase().includes(query.toLowerCase()) ||
+                        article.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+                    );
+                    setArticles(filtered);
+                }
             }
         } catch (error) {
             console.error('Search failed:', error);
-            // Фильтр моков
-            const filtered = articles.filter(article =>
+            setError('Search failed');
+            // Фильтр моков при ошибке
+            const filtered = getMockArticles().filter(article =>
                 article.title.toLowerCase().includes(query.toLowerCase()) ||
                 article.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
             );
@@ -87,6 +149,10 @@ export default function HomePage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleLogin = () => {
+        router.push('/login');
     };
 
     return (
@@ -108,6 +174,31 @@ export default function HomePage() {
                     </p>
                 )}
             </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="mb-8">
+                    <div className={`rounded-lg p-4 ${needsAuth ? 'bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700' : 'bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700'}`}>
+                        <div className="flex items-center">
+                            <AlertCircle className={`h-5 w-5 ${needsAuth ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'} mr-3`} />
+                            <p className={`text-sm ${needsAuth ? 'text-yellow-700 dark:text-yellow-300' : 'text-red-700 dark:text-red-300'}`}>
+                                {error}
+                            </p>
+                        </div>
+                        {needsAuth && (
+                            <div className="mt-3">
+                                <button
+                                    onClick={handleLogin}
+                                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-200 dark:bg-yellow-800 dark:hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                                >
+                                    <LogIn className="h-4 w-4 mr-2" />
+                                    Go to Login
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Articles Grid */}
             {loading ? (
