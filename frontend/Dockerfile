@@ -1,55 +1,73 @@
+# ==========================
+# Base image
+# ==========================
 FROM node:20-alpine AS base
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install dependencies only when needed
+# ==========================
+# Install dependencies
+# ==========================
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
-RUN \
-  if [ -f package-lock.json ]; then npm ci --only=production; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Copy package files
+COPY package.json package-lock.json ./
 
-# Rebuild the source code only when needed
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
+
+# ==========================
+# Builder stage
+# ==========================
 FROM base AS builder
 WORKDIR /app
+
+# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy app source
 COPY . .
 
-# Get build args
+# Build args for environment variables
 ARG NEXT_PUBLIC_API_URL
+ARG INTERNAL_API_URL
+
+# Set env vars for build
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV INTERNAL_API_URL=$INTERNAL_API_URL
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED 1
-
+# Build Next.js project
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# ==========================
+# Production runner
+# ==========================
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-
+# Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy production build from builder
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Set env vars at runtime
+ARG NEXT_PUBLIC_API_URL
+ARG INTERNAL_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV INTERNAL_API_URL=$INTERNAL_API_URL
 
-USER nextjs
-
+# Expose port
 EXPOSE 3000
 
-ENV PORT 3000
+# Switch to non-root user
+USER nextjs
 
+# Start server
 CMD ["node", "server.js"]
