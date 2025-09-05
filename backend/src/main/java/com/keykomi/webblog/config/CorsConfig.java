@@ -18,10 +18,14 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins(
+                        // Local development
                         "http://localhost:3000",
                         "http://localhost:3001",
                         "http://0.0.0.0:3001",
-                        "http://127.0.0.1:3001"
+                        "http://127.0.0.1:3001",
+                        // Production domain
+                        "https://blog.keykomi.com",
+                        "http://blog.keykomi.com"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
@@ -34,7 +38,11 @@ public class CorsConfig implements WebMvcConfigurer {
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
                 "http://0.0.0.0:*",
-                "http://127.0.0.1:*"
+                "http://127.0.0.1:*",
+                "https://blog.keykomi.com",
+                "http://blog.keykomi.com",
+                "https://*.keykomi.com",
+                "http://*.keykomi.com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

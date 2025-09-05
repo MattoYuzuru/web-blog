@@ -13,7 +13,7 @@ export default function ArticleCard({article}: ArticleCardProps) {
         <article
             className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
             {/* Image */}
-            <Link href={`/article/${article.id}`} className="block">
+            <Link href={`/api/articles/${article.id}`} className="block">
                 <div className="relative h-48 w-full">
                     <Image
                         src={article.image_url || '/placeholder-article.jpg'}
@@ -27,7 +27,7 @@ export default function ArticleCard({article}: ArticleCardProps) {
             {/* Content */}
             <div className="p-6">
                 {/* Title */}
-                <Link href={`/article/${article.id}`}>
+                <Link href={`/api/articles/${article.id}`}>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 hover:text-violet-600 dark:hover:text-violet-400 transition-colors mb-3 line-clamp-2">
                         {article.title}
                     </h3>
