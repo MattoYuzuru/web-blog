@@ -14,14 +14,14 @@ export default function Footer() {
                             KeykoMI Lib
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Блог о моей жизни, учебе, карьере...
+                            Веб-блог вместо ТГ-канала с маркдаун статьями.
                         </p>
                     </div>
 
                     {/* Contact */}
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Contact
+                            Контакты
                         </h3>
                         <div className="space-y-3">
                             <a
@@ -46,26 +46,26 @@ export default function Footer() {
                     {/* Links */}
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Quick Links
+                            Ссылки
                         </h3>
                         <div className="space-y-3">
                             <Link
                                 href="/"
                                 className="block text-sm text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
                             >
-                                Home
+                                Главная
                             </Link>
                             <Link
                                 href="/about"
                                 className="block text-sm text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
                             >
-                                About
+                                О сайте
                             </Link>
                             <Link
                                 href="/privacy"
                                 className="block text-sm text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
                             >
-                                Privacy Policy
+                                Политика конфиденциальности
                             </Link>
                         </div>
                     </div>
@@ -73,7 +73,7 @@ export default function Footer() {
 
                 <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
                     <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                        © {currentYear} KeykoMI Lib. All rights reserved. Built with Next.js and Spring.
+                        © {currentYear} KeykoMI Lib. Все права защищены. Построено с Next.js и Spring.
                     </p>
                 </div>
             </div>

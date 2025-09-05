@@ -68,13 +68,13 @@ export default function Header() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo and Title */}
                     <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-                        <Image
-                            src="/logo.svg"
-                            alt="KeykoMI Logo"
-                            width={40}
-                            height={40}
-                            className="h-10 w-auto"
-                        />
+                        {/*<Image*/}
+                        {/*    src="/logo.svg"*/}
+                        {/*    alt="KeykoMI Logo"*/}
+                        {/*    width={40}*/}
+                        {/*    height={40}*/}
+                        {/*    className="h-10 w-auto"*/}
+                        {/*/>*/}
                         <div>
                             <h1 className="text-xl font-bold">KeykoMI Lib</h1>
                             <p className="text-xs text-violet-200">Life Blog</p>

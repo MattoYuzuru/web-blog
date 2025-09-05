@@ -29,9 +29,7 @@ public class ArticleController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        // Исправляем пагинацию - Spring Data использует индексацию с 0
-        int springPage = Math.max(0, page - 1);
-        return articleService.getArticlesByPage(springPage, limit);
+        return articleService.getArticlesByPage(page, limit);
     }
 
     @GetMapping("/{id}")
