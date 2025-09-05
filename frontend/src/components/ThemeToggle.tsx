@@ -11,11 +11,12 @@ export default function ThemeToggle() {
             onClick={toggleTheme}
             className="p-2 rounded-lg transition-colors hover:bg-violet-500 hover:bg-opacity-50 dark:hover:bg-violet-700 dark:hover:bg-opacity-50"
             aria-label="Toggle theme"
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
         >
             {theme === 'light' ? (
-                <Moon className="h-5 w-5 text-white dark:text-violet-300"/>
+                <Moon className="h-5 w-5 text-white"/>
             ) : (
-                <Sun className="h-5 w-5 text-yellow-300 dark:text-yellow-200"/>
+                <Sun className="h-5 w-5 text-yellow-300"/>
             )}
         </button>
     );
