@@ -6,7 +6,7 @@ import SearchInput from '@/components/SearchInput';
 import ArticleCard from '@/components/ArticleCard';
 import {Article, BackendArticle} from '@/types';
 import {apiClient} from '@/lib/api';
-import {Loader2, AlertCircle, LogIn, LogOut} from 'lucide-react';
+import {Loader2, AlertCircle, LogIn} from 'lucide-react';
 
 export default function HomePage() {
     const [articles, setArticles] = useState<Article[]>([]);
@@ -33,6 +33,18 @@ export default function HomePage() {
         // Проверяем авторизацию при загрузке
         setIsAuthenticated(apiClient.isAuthenticated());
         loadArticles();
+
+        // Слушаем изменения статуса авторизации
+        const handleAuthChange = () => {
+            setIsAuthenticated(apiClient.isAuthenticated());
+            loadArticles(); // Перезагружаем статьи при изменении авторизации
+        };
+
+        window.addEventListener('authStateChanged', handleAuthChange);
+
+        return () => {
+            window.removeEventListener('authStateChanged', handleAuthChange);
+        };
     }, []);
 
     const loadArticles = async () => {
@@ -160,45 +172,13 @@ export default function HomePage() {
         router.push('/login');
     };
 
-    const handleLogout = () => {
-        apiClient.logout();
-        setIsAuthenticated(false);
-        // Перезагружаем статьи после выхода
-        loadArticles();
-    };
-
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Hero Section */}
             <div className="text-center mb-12">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex-1">
-                        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
-                            Welcome to KeykoMI Lib
-                        </h1>
-                    </div>
-
-                    {/* Auth Button */}
-                    <div className="ml-4">
-                        {isAuthenticated ? (
-                            <button
-                                onClick={handleLogout}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-600 bg-red-100 hover:bg-red-200 dark:text-red-200 dark:bg-red-800 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                            >
-                                <LogOut className="h-4 w-4 mr-2" />
-                                Logout
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleLogin}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-violet-600 bg-violet-100 hover:bg-violet-200 dark:text-violet-200 dark:bg-violet-800 dark:hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500"
-                            >
-                                <LogIn className="h-4 w-4 mr-2" />
-                                Login
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                    Welcome to KeykoMI Lib
+                </h1>
 
                 <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
                     Блог о моей жизни, учебе, карьере...
@@ -216,9 +196,11 @@ export default function HomePage() {
             {/* Error Message */}
             {error && (
                 <div className="mb-8">
-                    <div className={`rounded-lg p-4 ${needsAuth ? 'bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700' : 'bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700'}`}>
+                    <div
+                        className={`rounded-lg p-4 ${needsAuth ? 'bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700' : 'bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700'}`}>
                         <div className="flex items-center">
-                            <AlertCircle className={`h-5 w-5 ${needsAuth ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'} mr-3`} />
+                            <AlertCircle
+                                className={`h-5 w-5 ${needsAuth ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'} mr-3`}/>
                             <p className={`text-sm ${needsAuth ? 'text-yellow-700 dark:text-yellow-300' : 'text-red-700 dark:text-red-300'}`}>
                                 {error}
                             </p>
@@ -229,7 +211,7 @@ export default function HomePage() {
                                     onClick={handleLogin}
                                     className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-200 dark:bg-yellow-800 dark:hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
                                 >
-                                    <LogIn className="h-4 w-4 mr-2" />
+                                    <LogIn className="h-4 w-4 mr-2"/>
                                     Go to Login
                                 </button>
                             </div>

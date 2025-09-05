@@ -10,13 +10,32 @@ export default function Header() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('auth_token');
-        setIsAuthenticated(!!token);
+        const checkAuth = () => {
+            const token = localStorage.getItem('auth_token');
+            setIsAuthenticated(!!token);
+        };
+
+        // Проверяем при монтировании
+        checkAuth();
+
+        // Слушаем изменения в localStorage (для других вкладок)
+        window.addEventListener('storage', checkAuth);
+
+        // Слушаем кастомное событие для обновления состояния аутентификации
+        const handleAuthChange = () => checkAuth();
+        window.addEventListener('authStateChanged', handleAuthChange);
+
+        return () => {
+            window.removeEventListener('storage', checkAuth);
+            window.removeEventListener('authStateChanged', handleAuthChange);
+        };
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('auth_token');
         setIsAuthenticated(false);
+        // Уведомляем другие компоненты об изменении состояния аутентификации
+        window.dispatchEvent(new Event('authStateChanged'));
         window.location.href = '/';
     };
 
@@ -35,7 +54,7 @@ export default function Header() {
                         />
                         <div>
                             <h1 className="text-xl font-bold">KeykoMI Lib</h1>
-                            <p className="text-xs text-violet-200">Life Blog</p>
+                            <p className="text-xs text-violet-200 dark:text-violet-300">Life Blog</p>
                         </div>
                     </Link>
 
@@ -44,7 +63,7 @@ export default function Header() {
                         {isAuthenticated && (
                             <Link
                                 href="/article/new"
-                                className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-violet-500 hover:bg-violet-400 transition-colors"
+                                className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-violet-500 hover:bg-violet-400 dark:bg-violet-700 dark:hover:bg-violet-600 transition-colors"
                             >
                                 <PlusCircle className="h-4 w-4" />
                                 <span className="hidden sm:block">Новая Статья</span>
@@ -54,7 +73,7 @@ export default function Header() {
                         {isAuthenticated ? (
                             <button
                                 onClick={handleLogout}
-                                className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-violet-500 transition-colors"
+                                className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-violet-500 dark:hover:bg-violet-700 transition-colors"
                             >
                                 <LogOut className="h-4 w-4" />
                                 <span className="hidden sm:block">Logout</span>
@@ -62,7 +81,7 @@ export default function Header() {
                         ) : (
                             <Link
                                 href="/login"
-                                className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-violet-500 transition-colors"
+                                className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-violet-500 dark:hover:bg-violet-700 transition-colors"
                             >
                                 <LogIn className="h-4 w-4" />
                                 <span className="hidden sm:block">Login</span>
