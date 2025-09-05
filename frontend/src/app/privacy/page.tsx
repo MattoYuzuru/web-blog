@@ -5,10 +5,10 @@ export default function PrivacyPage() {
                 Privacy Policy
             </h1>
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                Мы уважаем вашу конфиденциальность. Этот сайт не собирает личные данные без вашего согласия.
+                Я уважаю вашу конфиденциальность. Этот сайт не собирает личные данные без вашего согласия.
             </p>
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                В некоторых случаях мы можем собирать обезличенную статистику о посещениях
+                В некоторых случаях я могу собирать обезличенную статистику о посещениях
                 для улучшения качества контента. Эти данные не позволяют идентифицировать конкретного пользователя.
             </p>
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
