@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,6 +22,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity() // Включаем поддержку @PreAuthorize
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
@@ -66,14 +68,19 @@ public class SecurityConfig {
                         // Публичные endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
 
-                        // Разрешить чтение статей без авторизации
+                        // Публичное чтение статей
                         .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/articles").permitAll()
 
-                        // Все остальные запросы требуют авторизации (создание, обновление, удаление статей)
+                        // Создание, обновление, удаление статей только для авторизованных
+                        .requestMatchers(HttpMethod.POST, "/api/articles/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/articles/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/articles/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/articles/**").authenticated()
+
+                        // Все остальные запросы требуют авторизации
                         .anyRequest().authenticated()
                 );
 

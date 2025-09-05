@@ -2,10 +2,12 @@ package com.keykomi.webblog.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SecurityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
@@ -39,16 +41,29 @@ public class JwtTokenProvider {
     }
 
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        if (!StringUtils.hasText(token)) {
+            return null;
+        }
 
-        return claims.getSubject();
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            return claims.getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            logger.warn("Failed to extract username from token: {}", e.getMessage());
+            return null;
+        }
     }
 
     public boolean validateToken(String authToken) {
+        if (!StringUtils.hasText(authToken)) {
+            return false;
+        }
+
         try {
             Jwts.parser()
                     .verifyWith(secretKey)
