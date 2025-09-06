@@ -33,11 +33,13 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
 
-# JWT Configuration
+# JWT Configuration and S3
 app:
   jwt:
     secret: ${JWT_SECRET:759234752903847529340572839042798}
     expiration-ms: ${JWT_EXPIRATION:5184000000} # 60 days in milliseconds
+  s3:
+    bucket: ${AWS_BUCKET_NAME:keykomi-blog-bucket}
 
 # Logging
 logging:

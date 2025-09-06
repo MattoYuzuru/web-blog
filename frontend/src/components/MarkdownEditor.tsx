@@ -1,8 +1,9 @@
 'use client';
 
-import {useState} from 'react';
+import {useState, useRef} from 'react';
 import {Eye, Edit} from 'lucide-react';
 import ArticleContent from './ArticleContent';
+import {apiClient} from "@/lib/api";
 
 interface MarkdownEditorProps {
     value: string;
@@ -12,6 +13,84 @@ interface MarkdownEditorProps {
 
 export default function MarkdownEditor({value, onChange, placeholder}: MarkdownEditorProps) {
     const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    async function uploadFile(file: File): Promise<string | null> {
+        try {
+            const response = await apiClient.uploadImage(file);
+
+            if (response.success && response.data?.url) {
+                return response.data.url;
+            } else {
+                alert(response.message || "Ошибка загрузки файла");
+                return null;
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert("Ошибка загрузки файла");
+            return null;
+        }
+    }
+
+    function insertAtCursor(text: string) {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const newValue = value.substring(0, start) + text + value.substring(end);
+        onChange(newValue);
+
+        // Восстанавливаем позицию курсора
+        setTimeout(() => {
+            const newPosition = start + text.length;
+            textarea.setSelectionRange(newPosition, newPosition);
+            textarea.focus();
+        }, 0);
+    }
+
+    async function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.kind === "file") {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (!file) return;
+
+                const url = await uploadFile(file);
+                if (url) {
+                    insertAtCursor(`![image](${url})`);
+                }
+            }
+        }
+    }
+
+    async function handleDrop(e: React.DragEvent<HTMLTextAreaElement>) {
+        e.preventDefault();
+        const files = Array.from(e.dataTransfer.files);
+
+        for (const file of files) {
+            if (file.type.startsWith('image/')) {
+                const url = await uploadFile(file);
+                if (url) {
+                    insertAtCursor(`![image](${url})\n`);
+                }
+            }
+        }
+    }
+
+    function handleDragOver(e: React.DragEvent<HTMLTextAreaElement>) {
+        e.preventDefault();
+        // Добавляем визуальную обратную связь при перетаскивании
+        e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+    }
+
+    function handleDragLeave(e: React.DragEvent<HTMLTextAreaElement>) {
+        e.preventDefault();
+        // Убираем визуальную обратную связь
+        e.currentTarget.style.backgroundColor = '';
+    }
 
     return (
         <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
@@ -47,10 +126,15 @@ export default function MarkdownEditor({value, onChange, placeholder}: MarkdownE
             <div className="min-h-[400px]">
                 {activeTab === 'write' ? (
                     <textarea
+                        ref={textareaRef}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
-                        placeholder={placeholder || "Write your article in Markdown..."}
-                        className="w-full h-[400px] p-4 border-none resize-none focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        onPaste={handlePaste}
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        placeholder={placeholder || "Write your article in Markdown... Paste or drag images to upload"}
+                        className="w-full h-[400px] p-4 border-none resize-none focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
                         style={{fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", monospace'}}
                     />
                 ) : (
@@ -68,12 +152,18 @@ export default function MarkdownEditor({value, onChange, placeholder}: MarkdownE
 
             {/* Markdown Help */}
             {activeTab === 'write' && (
-                <div
-                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">
-                    <span className="font-medium">Markdown tips:</span>
-                    <span className="ml-2">
-  **bold** *italic* `code` [link](url) # heading ## subheading - list item {'>'} quote
-                    </span>
+                <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div>
+                            <span className="font-medium">Markdown tips:</span>
+                            <span className="ml-2">
+                                **bold** *italic* `code` [link](url) # heading ## subheading - list item {'>'} quote
+                            </span>
+                        </div>
+                        <div className="text-violet-600 dark:text-violet-400 font-medium">
+                            📎 Drag & drop or paste images to upload
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

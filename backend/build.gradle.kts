@@ -42,6 +42,10 @@ dependencies {
 	// Database
 	runtimeOnly("org.postgresql:postgresql")
 
+	// S3
+	implementation("software.amazon.awssdk:s3:2.30.19")
+	implementation("software.amazon.awssdk:auth:2.30.19")
+
 	// Lombok
 	annotationProcessor("org.projectlombok:lombok")
 	compileOnly("org.projectlombok:lombok")

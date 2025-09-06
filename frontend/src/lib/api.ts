@@ -88,6 +88,53 @@ class ApiClient {
         }
     }
 
+    // Special request method for file uploads (without JSON Content-Type)
+    private async uploadRequest<T>(
+        endpoint: string,
+        formData: FormData
+    ): Promise<T> {
+        const url = `${this.baseUrl}${endpoint}`;
+
+        // Always check for fresh token before request
+        if (typeof window !== 'undefined') {
+            this.token = localStorage.getItem('auth_token');
+        }
+
+        const headers: Record<string, string> = {};
+
+        if (this.token) {
+            headers['Authorization'] = `Bearer ${this.token}`;
+        }
+
+        try {
+            console.log(`Making upload request to: ${url}`);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: formData,
+                mode: 'cors',
+                credentials: 'omit',
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Upload request failed:', response.status, errorText);
+
+                if (response.status === 401) {
+                    this.logout();
+                    throw new Error('Unauthorized - please login again');
+                }
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Upload request failed:', error);
+            throw error;
+        }
+    }
+
     // Auth methods
     async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
         try {
@@ -128,6 +175,28 @@ class ApiClient {
         this.token = null;
         if (typeof window !== 'undefined') {
             localStorage.removeItem('auth_token');
+        }
+    }
+
+    // Upload method
+    async uploadImage(file: File): Promise<ApiResponse<{url: string}>> {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await this.uploadRequest<{url: string}>('/api/uploads/image', formData);
+
+            return {
+                data: response,
+                success: true
+            };
+        } catch (error) {
+            console.error('Failed to upload image:', error);
+            return {
+                data: { url: '' },
+                success: false,
+                message: error instanceof Error ? error.message : 'Failed to upload image'
+            };
         }
     }
 
