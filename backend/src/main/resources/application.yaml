@@ -39,7 +39,7 @@ app:
     secret: ${JWT_SECRET:759234752903847529340572839042798}
     expiration-ms: ${JWT_EXPIRATION:5184000000} # 60 days in milliseconds
   s3:
-    bucket: ${AWS_BUCKET_NAME:keykomi-blog-bucket}
+    bucket: ${AWS_BUCKET_NAME:storage-for-blog}
 
 # Logging
 logging:

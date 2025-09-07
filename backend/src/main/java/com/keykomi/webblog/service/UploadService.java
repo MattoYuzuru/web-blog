@@ -8,7 +8,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.net.URL;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -16,26 +15,44 @@ import java.util.UUID;
 public class UploadService {
 
     private final S3Client s3Client;
-    private final String bucketName;
 
-    public UploadService(S3Client s3Client, @Value("${app.s3.bucket}") String bucketName) {
+    @Value("${app.s3.bucket}")
+    private String bucketName;
+
+    public UploadService(S3Client s3Client) {
         this.s3Client = s3Client;
-        this.bucketName = bucketName;
     }
 
     public String uploadImage(MultipartFile file) throws IOException {
-        String key = "articles/" + Instant.now().getEpochSecond() + "-" + UUID.randomUUID() + "-" + file.getOriginalFilename();
+        // Проверяем тип файла
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Файл должен быть изображением");
+        }
 
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .acl("public-read") // если нужен публичный доступ
-                .contentType(file.getContentType())
-                .build();
+        // Создаем уникальное имя файла
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
 
-        s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+        String key = "articles/" + Instant.now().getEpochSecond() + "-" + UUID.randomUUID() + extension;
 
-        // URL до файла
-        return "https://" + bucketName + ".s3.amazonaws.com/" + key;
+        try {
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .contentType(contentType)
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+
+            // Возвращаем URL для Yandex Cloud Storage
+            return "https://storage.yandexcloud.net/" + bucketName + "/" + key;
+
+        } catch (Exception e) {
+            throw new IOException("Ошибка при загрузке файла в Yandex Cloud Storage: " + e.getMessage(), e);
+        }
     }
 }
