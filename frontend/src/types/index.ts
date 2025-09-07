@@ -14,9 +14,9 @@ export interface BackendArticle {
     id: number;
     title: string;
     content: string;
-    image_url?: string;
-    published_at?: string;
-    read_count?: number;
+    imageUrl?: string; // Обратите внимание на camelCase
+    publishedAt?: string; // Обратите внимание на camelCase
+    readCount?: number; // Обратите внимание на camelCase
     tags?: string[];
     author?: string;
 }
@@ -34,25 +34,20 @@ export interface SearchParams {
     limit?: number;
 }
 
-// Типы для пагинации Spring Boot
-export interface Pageable {
-    page_number: number;
-    page_size: number;
-    sort: {
-        empty: boolean;
-        sorted: boolean;
-        unsorted: boolean;
-    };
-    offset: number;
-    paged: boolean;
-    unpaged: boolean;
+// Ваш новый PaginatedResponse класс из бэкенда
+export interface PaginatedResponse<T> {
+    items: T[];
+    total: number;
+    page: number;
+    limit: number;
 }
 
-export interface PaginatedResponse<T> {
+// Стандартный Spring Boot Page для совместимости с getArticles
+export interface SpringPageResponse<T> {
     content: T[];
     pageable: Pageable;
-    total_pages: number;
-    total_elements: number;
+    totalPages: number;
+    totalElements: number;
     last: boolean;
     size: number;
     number: number;
@@ -61,9 +56,23 @@ export interface PaginatedResponse<T> {
         sorted: boolean;
         unsorted: boolean;
     };
-    number_of_elements: number;
+    numberOfElements: number;
     first: boolean;
     empty: boolean;
+}
+
+// Типы для пагинации Spring Boot
+export interface Pageable {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+        empty: boolean;
+        sorted: boolean;
+        unsorted: boolean;
+    };
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
 }
 
 export interface LoginRequest {

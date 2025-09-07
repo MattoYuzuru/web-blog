@@ -4,7 +4,8 @@ import {
     CreateArticleRequest,
     LoginRequest,
     LoginResponse,
-    PaginatedResponse
+    PaginatedResponse,
+    SpringPageResponse
 } from '@/types';
 
 class ApiClient {
@@ -200,10 +201,10 @@ class ApiClient {
         }
     }
 
-    // Articles methods
-    async getArticles(page: number = 1, limit: number = 10): Promise<ApiResponse<PaginatedResponse<BackendArticle>>> {
+    // Articles methods - используем Spring Page response
+    async getArticles(page: number = 1, limit: number = 10): Promise<ApiResponse<SpringPageResponse<BackendArticle>>> {
         try {
-            const response = await this.request<PaginatedResponse<BackendArticle>>(`/api/articles?page=${page}&limit=${limit}`);
+            const response = await this.request<SpringPageResponse<BackendArticle>>(`/api/articles?page=${page}&limit=${limit}`);
             return {
                 data: response,
                 success: true
@@ -211,7 +212,7 @@ class ApiClient {
         } catch (error) {
             console.error('Failed to get articles:', error);
             return {
-                data: {} as PaginatedResponse<BackendArticle>,
+                data: {} as SpringPageResponse<BackendArticle>,
                 success: false,
                 message: error instanceof Error ? error.message : 'Failed to get articles'
             };
@@ -255,9 +256,13 @@ class ApiClient {
         }
     }
 
-    async searchArticles(query: string): Promise<ApiResponse<PaginatedResponse<BackendArticle>>> {
+    // Search method - использует ваш новый PaginatedResponse
+    async searchArticles(query: string, page: number = 1, limit: number = 10): Promise<ApiResponse<PaginatedResponse<BackendArticle>>> {
         try {
-            const response = await this.request<PaginatedResponse<BackendArticle>>(`/api/articles/search?q=${encodeURIComponent(query)}`);
+            // Обратите внимание: ваш SearchController ожидает 0-based page, но мы передаем 1-based
+            const response = await this.request<PaginatedResponse<BackendArticle>>(
+                `/api/articles/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`
+            );
             return {
                 data: response,
                 success: true

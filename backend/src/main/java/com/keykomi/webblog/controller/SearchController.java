@@ -19,7 +19,7 @@ public class SearchController {
     @GetMapping("/search")
     public PaginatedResponse<Article> search(
             @RequestParam String q,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page, // Изменено на 1 для консистентности с ArticleController
             @RequestParam(defaultValue = "10") int limit) {
 
         Page<Article> result = searchService.searchArticles(q, page, limit);
@@ -27,7 +27,7 @@ public class SearchController {
         return new PaginatedResponse<>(
                 result.getContent(),
                 result.getTotalElements(),
-                result.getNumber(),
+                page, // Используем исходный page, а не result.getNumber()
                 result.getSize()
         );
     }
