@@ -5,7 +5,17 @@ const nextConfig = {
 
     // Настройки для изображений
     images: {
-        domains: ['localhost'],
+        domains: [
+            'localhost',
+            'storage.yandexcloud.net' // Добавлен домен Yandex Cloud
+        ],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'storage.yandexcloud.net',
+                pathname: '/**',
+            },
+        ],
         unoptimized: true, // Для упрощения в Docker
     },
 

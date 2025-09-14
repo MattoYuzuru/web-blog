@@ -22,9 +22,9 @@ export default function HomePage() {
         id: backendArticle.id?.toString() || '',
         title: backendArticle.title || 'No title',
         content: backendArticle.content || '',
-        image_url: backendArticle.imageUrl || '/placeholder-article.jpg',
-        published_at: backendArticle.publishedAt || new Date().toISOString().split('T')[0],
-        read_count: backendArticle.readCount || 0,
+        image_url: backendArticle.image_url || '/placeholder-article.jpg',
+        published_at: backendArticle.published_at || new Date().toISOString().split('T')[0],
+        read_count: backendArticle.read_count || 0,
         tags: backendArticle.tags || [],
         author: backendArticle.author || 'KeykoMI'
     });

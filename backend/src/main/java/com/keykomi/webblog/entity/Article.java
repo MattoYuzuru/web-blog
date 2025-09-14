@@ -5,7 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -33,4 +33,23 @@ public class Article {
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    @Column(name = "author", length = 100)
+    private String author;
+
+    // Если у вас есть отдельная таблица для тегов
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "article_tags", joinColumns = @JoinColumn(name = "article_id"))
+    @Column(name = "tag")
+    private List<String> tags;
+
+    @PrePersist
+    protected void onCreate() {
+        if (publishedAt == null) {
+            publishedAt = LocalDateTime.now();
+        }
+        if (author == null) {
+            author = "KeykoMI"; // значение по умолчанию
+        }
+    }
 }

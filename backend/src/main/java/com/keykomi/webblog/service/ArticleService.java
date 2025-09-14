@@ -7,7 +7,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,13 +53,15 @@ public class ArticleService {
         existing.setContent(dto.getContent());
         existing.setReadCount(dto.getReadCount());
         existing.setImageUrl(dto.getImageUrl());
+        existing.setTags(dto.getTags());
+        existing.setAuthor(dto.getAuthor());
 
         return toDTO(articleRepository.save(existing));
     }
 
     public ArticleDTO partialUpdateArticle(Long id, ArticleDTO dto) {
         Article existing = articleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Article not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Article not found: " + id));
 
         if (dto.getTitle() != null) {
             existing.setTitle(dto.getTitle());
@@ -71,8 +75,29 @@ public class ArticleService {
         if (dto.getImageUrl() != null) {
             existing.setImageUrl(dto.getImageUrl());
         }
+        if (dto.getTags() != null) {
+            existing.setTags(dto.getTags());
+        }
+        if (dto.getAuthor() != null) {
+            existing.setAuthor(dto.getAuthor());
+        }
 
         return toDTO(articleRepository.save(existing));
+    }
+
+    @Transactional
+    public ArticleDTO incrementReadCount(Long id) {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Article not found: " + id));
+
+        // Инкрементируем счетчик
+        Long newReadCount = (article.getReadCount() != null ? article.getReadCount() : 0L) + 1;
+        article.setReadCount(newReadCount);
+
+        // Сохраняем изменения
+        Article savedArticle = articleRepository.save(article);
+
+        return toDTO(savedArticle);
     }
 
     public void deleteArticle(Long id) {
@@ -91,6 +116,8 @@ public class ArticleService {
         dto.setReadCount(article.getReadCount());
         dto.setPublishedAt(article.getPublishedAt());
         dto.setImageUrl(article.getImageUrl());
+        dto.setTags(article.getTags());
+        dto.setAuthor(article.getAuthor());
 
         return dto;
     }
@@ -102,6 +129,15 @@ public class ArticleService {
         article.setContent(dto.getContent());
         article.setReadCount(dto.getReadCount());
         article.setImageUrl(dto.getImageUrl());
+        article.setTags(dto.getTags());
+        article.setAuthor(dto.getAuthor());
+
+        // Если дата не указана, устанавливаем текущую
+        if (dto.getPublishedAt() == null) {
+            article.setPublishedAt(LocalDateTime.now());
+        } else {
+            article.setPublishedAt(dto.getPublishedAt());
+        }
 
         return article;
     }

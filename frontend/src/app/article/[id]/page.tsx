@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef, useCallback} from 'react';
 import {useParams} from 'next/navigation';
 import Image from 'next/image';
 import {Calendar, Eye, ArrowLeft, Loader2} from 'lucide-react';
@@ -17,23 +17,118 @@ export default function ArticlePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Для отслеживания прочтения
+    const startTimeRef = useRef<number>(0);
+    const hasScrolledToEndRef = useRef<boolean>(false);
+    const hasSpentMinuteRef = useRef<boolean>(false);
+    const hasIncrementedRef = useRef<boolean>(false);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     // Функция для преобразования данных бэкенда в формат фронтенда
     const transformBackendArticle = (backendArticle: BackendArticle): Article => ({
         id: backendArticle.id?.toString() || '',
         title: backendArticle.title || 'No title',
         content: backendArticle.content || '',
-        image_url: backendArticle.imageUrl || '/placeholder-article.jpg',
-        published_at: backendArticle.publishedAt || new Date().toISOString().split('T')[0],
-        read_count: backendArticle.readCount || 0,
+        image_url: backendArticle.image_url || '/placeholder-article.jpg',
+        published_at: backendArticle.published_at || new Date().toISOString(),
+        read_count: backendArticle.read_count || 0,
         tags: backendArticle.tags || [],
         author: backendArticle.author || 'KeykoMI'
     });
+
+    // Проверка условий для инкремента счетчика
+    const checkReadingConditions = useCallback(async () => {
+        if (hasIncrementedRef.current || !article) return;
+
+        const hasScrolled = hasScrolledToEndRef.current;
+        const hasSpentTime = hasSpentMinuteRef.current;
+
+        if (hasScrolled && hasSpentTime) {
+            const sessionKey = `read_${articleId}`;
+
+            if (sessionStorage.getItem(sessionKey)) {
+                return;
+            }
+
+            try {
+                const response = await apiClient.incrementReadCount(articleId);
+                if (response.success) {
+                    // Обновляем локальный счетчик
+                    setArticle(prev => prev ? {
+                        ...prev,
+                        read_count: response.data.readCount // Используем значение из ответа сервера
+                    } : null);
+
+                    sessionStorage.setItem(sessionKey, 'true');
+                    hasIncrementedRef.current = true;
+
+                    console.log('Read count incremented successfully to:', response.data.readCount);
+                }
+            } catch (error) {
+                console.error('Failed to increment read count:', error);
+            }
+        }
+    }, [articleId, article]);
+
+    // Обработчик скролла
+    const handleScroll = useCallback(() => {
+        if (hasScrolledToEndRef.current) return;
+
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+
+        // Считаем, что пользователь дочитал до конца, если осталось менее 100px
+        const scrolledToEnd = scrollTop + windowHeight >= documentHeight - 100;
+
+        if (scrolledToEnd) {
+            hasScrolledToEndRef.current = true;
+            console.log('User scrolled to end');
+            checkReadingConditions();
+        }
+    }, [checkReadingConditions]);
+
+    // Обработчик времени чтения
+    const startReadingTimer = useCallback(() => {
+        timeoutRef.current = setTimeout(() => {
+            hasSpentMinuteRef.current = true;
+            console.log('User spent 1 minute reading');
+            checkReadingConditions();
+        }, 60000); // 60 секунд = 1 минута
+    }, [checkReadingConditions]);
 
     useEffect(() => {
         if (articleId) {
             loadArticle();
         }
     }, [articleId]);
+
+    useEffect(() => {
+        if (article && !loading) {
+            // Запускаем отслеживание только после загрузки статьи
+            startTimeRef.current = Date.now();
+
+            // Проверяем, не была ли статья уже прочитана в этой сессии
+            const sessionKey = `read_${articleId}`;
+            if (sessionStorage.getItem(sessionKey)) {
+                hasIncrementedRef.current = true;
+                return;
+            }
+
+            // Добавляем обработчик скролла
+            window.addEventListener('scroll', handleScroll, { passive: true });
+
+            // Запускаем таймер
+            startReadingTimer();
+
+            return () => {
+                window.removeEventListener('scroll', handleScroll);
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                }
+            };
+        }
+    }, [article, loading, articleId, handleScroll, startReadingTimer]);
 
     const loadArticle = async () => {
         setLoading(true);

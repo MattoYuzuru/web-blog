@@ -256,6 +256,26 @@ class ApiClient {
         }
     }
 
+    // Метод для инкремента счетчика прочтений
+    async incrementReadCount(articleId: string): Promise<ApiResponse<{readCount: number}>> {
+        try {
+            const response = await this.request<{readCount: number}>(`/api/articles/${articleId}/increment-read`, {
+                method: 'POST',
+            });
+            return {
+                data: response,
+                success: true
+            };
+        } catch (error) {
+            console.error('Failed to increment read count:', error);
+            return {
+                data: { readCount: 0 },
+                success: false,
+                message: error instanceof Error ? error.message : 'Failed to increment read count'
+            };
+        }
+    }
+
     // Search method - использует ваш новый PaginatedResponse
     async searchArticles(query: string, page: number = 1, limit: number = 10): Promise<ApiResponse<PaginatedResponse<BackendArticle>>> {
         try {

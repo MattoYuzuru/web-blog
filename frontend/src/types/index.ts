@@ -3,7 +3,7 @@ export interface Article {
     title: string;
     content: string;
     image_url: string;
-    published_at: string;
+    published_at: string; // Обязательное поле
     read_count: number;
     tags: string[];
     author?: string;
@@ -14,9 +14,9 @@ export interface BackendArticle {
     id: number;
     title: string;
     content: string;
-    imageUrl?: string; // Обратите внимание на camelCase
-    publishedAt?: string; // Обратите внимание на camelCase
-    readCount?: number; // Обратите внимание на camelCase
+    image_url?: string; // Может быть undefined
+    published_at?: string; // Может быть undefined
+    read_count?: number; // Может быть undefined
     tags?: string[];
     author?: string;
 }
