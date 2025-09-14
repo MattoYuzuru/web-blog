@@ -7,7 +7,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,6 +77,29 @@ public class ArticleService {
         return toDTO(articleRepository.save(existing));
     }
 
+    /**
+     * Инкрементирует счетчик прочтений статьи
+     * Использует @Transactional для обеспечения атомарности операции
+     *
+     * @param id ID статьи
+     * @return новое значение счетчика прочтений
+     */
+    @Transactional
+    public ArticleDTO incrementReadCount(Long id) {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Article not found: " + id));
+
+        // Инкрементируем счетчик
+        Long newReadCount = (article.getReadCount() != null ? article.getReadCount() : 0L) + 1;
+        article.setReadCount(newReadCount);
+
+        // Сохраняем изменения
+        Article savedArticle = articleRepository.save(article);
+
+        // Возвращаем обновленный DTO вместо только числа
+        return toDTO(savedArticle);
+    }
+
     public void deleteArticle(Long id) {
         if (!articleRepository.existsById(id)) {
             throw new RuntimeException("Article not found: " + id);
@@ -102,6 +127,14 @@ public class ArticleService {
         article.setContent(dto.getContent());
         article.setReadCount(dto.getReadCount());
         article.setImageUrl(dto.getImageUrl());
+
+        // Если дата не указана, устанавливаем текущую
+        if (dto.getPublishedAt() == null) {
+            article.setPublishedAt(LocalDateTime.now());
+        } else {
+            article.setPublishedAt(dto.getPublishedAt());
+        }
+
 
         return article;
     }
