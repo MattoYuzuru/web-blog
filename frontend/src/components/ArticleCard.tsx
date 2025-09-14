@@ -20,6 +20,13 @@ export default function ArticleCard({article}: ArticleCardProps) {
                         alt={article.title}
                         fill
                         className="object-cover hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                            console.error('Image failed to load:', article.image_url);
+                            console.error('Error details:', e);
+                        }}
+                        onLoad={() => {
+                            console.log('Image loaded successfully:', article.image_url);
+                        }}
                     />
                 </div>
             </Link>

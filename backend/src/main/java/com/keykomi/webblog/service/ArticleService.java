@@ -53,13 +53,15 @@ public class ArticleService {
         existing.setContent(dto.getContent());
         existing.setReadCount(dto.getReadCount());
         existing.setImageUrl(dto.getImageUrl());
+        existing.setTags(dto.getTags());
+        existing.setAuthor(dto.getAuthor());
 
         return toDTO(articleRepository.save(existing));
     }
 
     public ArticleDTO partialUpdateArticle(Long id, ArticleDTO dto) {
         Article existing = articleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Article not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Article not found: " + id));
 
         if (dto.getTitle() != null) {
             existing.setTitle(dto.getTitle());
@@ -73,17 +75,16 @@ public class ArticleService {
         if (dto.getImageUrl() != null) {
             existing.setImageUrl(dto.getImageUrl());
         }
+        if (dto.getTags() != null) {
+            existing.setTags(dto.getTags());
+        }
+        if (dto.getAuthor() != null) {
+            existing.setAuthor(dto.getAuthor());
+        }
 
         return toDTO(articleRepository.save(existing));
     }
 
-    /**
-     * Инкрементирует счетчик прочтений статьи
-     * Использует @Transactional для обеспечения атомарности операции
-     *
-     * @param id ID статьи
-     * @return новое значение счетчика прочтений
-     */
     @Transactional
     public ArticleDTO incrementReadCount(Long id) {
         Article article = articleRepository.findById(id)
@@ -96,7 +97,6 @@ public class ArticleService {
         // Сохраняем изменения
         Article savedArticle = articleRepository.save(article);
 
-        // Возвращаем обновленный DTO вместо только числа
         return toDTO(savedArticle);
     }
 
@@ -116,6 +116,8 @@ public class ArticleService {
         dto.setReadCount(article.getReadCount());
         dto.setPublishedAt(article.getPublishedAt());
         dto.setImageUrl(article.getImageUrl());
+        dto.setTags(article.getTags());
+        dto.setAuthor(article.getAuthor());
 
         return dto;
     }
@@ -127,6 +129,8 @@ public class ArticleService {
         article.setContent(dto.getContent());
         article.setReadCount(dto.getReadCount());
         article.setImageUrl(dto.getImageUrl());
+        article.setTags(dto.getTags());
+        article.setAuthor(dto.getAuthor());
 
         // Если дата не указана, устанавливаем текущую
         if (dto.getPublishedAt() == null) {
@@ -134,7 +138,6 @@ public class ArticleService {
         } else {
             article.setPublishedAt(dto.getPublishedAt());
         }
-
 
         return article;
     }
