@@ -5,7 +5,6 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 
 @Entity
 @Getter
@@ -33,4 +32,11 @@ public class Article {
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    @PrePersist
+    protected void onCreate() {
+        if (publishedAt == null) {
+            publishedAt = LocalDateTime.now();
+        }
+    }
 }
